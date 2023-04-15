@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "211715356640",
+    "project_id": "notes-29ed2",
+    "storage_bucket": "notes-29ed2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:211715356640:android:98e2c2a5a204f528bd9d85",
+        "android_client_info": {
+          "package_name": "com.example.firebase_auth_clean_arch"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "211715356640-dbg6ej1q496c6ckcnhn8qupi9ls7r392.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmFgWelhSC7FkQUV2vKPoKSP0quSoklFM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "211715356640-dbg6ej1q496c6ckcnhn8qupi9ls7r392.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "211715356640-219u6hlmargo3j0jigmb7gd6abv97qas.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.firebaseAuthCleanArch"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
