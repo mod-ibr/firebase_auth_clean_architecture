@@ -4,10 +4,10 @@ import '../../../../core/Errors/failure.dart';
 import '../Entites/auth_entity.dart';
  import '../Repositories/auth_repository.dart';
 
-class EmailAndPasswordLogIn {
+class EmailAndPasswordLogInUseCase {
   final AuthRepository authRepository;
 
-  EmailAndPasswordLogIn({required this.authRepository});
+  EmailAndPasswordLogInUseCase({required this.authRepository});
   Future<Either<Failure, Unit>> call(AuthEntity authEntity) async {
     return await authRepository.emailAndPasswordLogIn(authEntity);
   }

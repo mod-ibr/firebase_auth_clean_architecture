@@ -14,7 +14,11 @@ abstract class AuthRemoteDataSource {
   Future<Unit> setUserData(AuthModel authModel);
   Future<UserCredential> createAccount(AuthModel authModel);
   Future<UserCredential> emailAndPasswordLogIn(AuthModel authModel);
-  Future<Unit> phoneLogIn(AuthModel authModel);
+  Future<Unit> phoneLogIn(
+      {required String completePhoneNumber,
+      required String countryCode,
+      required String phoneNumber,
+      String? otpCode});
   Future<UserCredential> faceBookLogIn();
   Future<UserCredential> googleLogIn();
   Future<Unit> logOut();
@@ -136,7 +140,11 @@ class AuthRemoteDataSourceHttp implements AuthRemoteDataSource {
   }
 
   @override
-  Future<Unit> phoneLogIn(AuthModel authModel) {
+  Future<Unit> phoneLogIn(
+      {required String completePhoneNumber,
+      required String countryCode,
+      required String phoneNumber,
+      String? otpCode}) {
     // TODO: implement phoneLogIn
     throw UnimplementedError();
   }

@@ -3,10 +3,10 @@ import '../../../../core/Errors/failure.dart';
 
 import '../Repositories/auth_repository.dart';
 
-class FaceBookLogIn {
+class FaceBookLogInUseCase {
   final AuthRepository authRepository;
 
-  FaceBookLogIn({required this.authRepository});
+  FaceBookLogInUseCase({required this.authRepository});
   Future<Either<Failure, Unit>> call() async {
     return await authRepository.faceBookLogIn();
   }

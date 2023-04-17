@@ -143,7 +143,11 @@ class AuthRepositoryImpl extends AuthRepository {
   }
 
   @override
-  Future<Either<Failure, Unit>> phoneLogIn(AuthEntity authEntity) {
+  Future<Either<Failure, Unit>> phoneLogIn(
+      {required String completePhoneNumber,
+      required String countryCode,
+      required String phoneNumber,
+      String? otpCode}) {
     // TODO: implement phoneLogIn
     throw UnimplementedError();
   }

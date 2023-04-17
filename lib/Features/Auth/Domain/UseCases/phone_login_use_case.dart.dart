@@ -1,14 +1,21 @@
 import 'package:dartz/dartz.dart';
 
 import '../../../../core/Errors/failure.dart';
-import '../Entites/auth_entity.dart';
 import '../Repositories/auth_repository.dart';
 
-class PhoneLogIn {
+class PhoneLogInUseCase {
   final AuthRepository authRepository;
 
-  PhoneLogIn({required this.authRepository});
-  Future<Either<Failure, Unit>> call(AuthEntity authEntity) async {
-    return await authRepository.phoneLogIn(authEntity);
+  PhoneLogInUseCase({required this.authRepository});
+  Future<Either<Failure, Unit>> call(
+      {required String completePhoneNumber,
+      required String countryCode,
+      required String phoneNumber,
+      String? otpCode}) async {
+    return await authRepository.phoneLogIn(
+        completePhoneNumber: completePhoneNumber,
+        countryCode: countryCode,
+        phoneNumber: phoneNumber,
+        otpCode: otpCode);
   }
 }

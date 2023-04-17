@@ -6,4 +6,5 @@ abstract class AuthConstants {
   static const kUserData = 'userData';
   static const kIsUserLoggedIn = 'isUserLoggedIn';
   static const kUsersCollection = 'users';
+  static const kSplashScreenDurationInSecond = 5;
 }
