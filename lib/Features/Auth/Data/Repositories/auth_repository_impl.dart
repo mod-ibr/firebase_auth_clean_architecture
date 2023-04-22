@@ -1,23 +1,23 @@
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_auth_clean_arch/Features/Auth/Data/Models/auth_model.dart';
-import 'package:firebase_auth_clean_arch/Features/Auth/Domain/Entites/auth_entity.dart';
-import 'package:firebase_auth_clean_arch/core/Errors/failure.dart';
 
-import '../../../../core/Errors/exception.dart';
+import '../../../../Core/Errors/exception.dart';
+import '../../../../core/Errors/failures.dart';
 import '../../../../core/Network/network_connection_checker.dart';
+import '../../Domain/Entites/auth_entity.dart';
 import '../../Domain/Repositories/auth_repository.dart';
 import '../DataSources/auth_local_data_source.dart';
 import '../DataSources/auth_remote_data_source.dart';
+import '../Models/auth_model.dart';
 
 class AuthRepositoryImpl extends AuthRepository {
-  final AuthLocalDataSource postLocalDataSource;
-  final AuthRemoteDataSource postRemoteDataSource;
+  final AuthLocalDataSource authLocalDataSource;
+  final AuthRemoteDataSource authRemoteDataSource;
   final NetworkConnectionChecker networkConnectionChecker;
 
   AuthRepositoryImpl(
-      {required this.postLocalDataSource,
-      required this.postRemoteDataSource,
+      {required this.authLocalDataSource,
+      required this.authRemoteDataSource,
       required this.networkConnectionChecker});
 
   @override
@@ -25,15 +25,16 @@ class AuthRepositoryImpl extends AuthRepository {
     if (await networkConnectionChecker.isConnected) {
       try {
         AuthModel authModel = AuthModel(
-            userName: authEntity.userName,
+            userName: authEntity.userName ?? '',
             email: authEntity.email,
-            password: authEntity.password,
-            phone: authEntity.phone);
+            password: authEntity.password ?? '',
+            phone: authEntity.phone ?? '');
 
-        await postRemoteDataSource.createAccount(authModel);
-        await postRemoteDataSource.setUserData(authModel);
-        await postLocalDataSource.setUserData(authModel);
-        await postLocalDataSource.setIsUserLoggedIn(isUserLoggedIn: true);
+        await authRemoteDataSource.createAccount(authModel);
+
+        await authRemoteDataSource.setUserData(authModel);
+        await authLocalDataSource.setUserData(authModel);
+        await authLocalDataSource.setIsUserLoggedIn(isUserLoggedIn: true);
 
         return const Right(unit);
       } on WeakPasswordException {
@@ -54,21 +55,23 @@ class AuthRepositoryImpl extends AuthRepository {
     if (await networkConnectionChecker.isConnected) {
       try {
         AuthModel authModel = AuthModel(
-            userName: authEntity.userName,
+            userName: authEntity.userName ?? '',
             email: authEntity.email,
-            password: authEntity.password,
-            phone: authEntity.phone);
+            password: authEntity.password ?? '',
+            phone: authEntity.phone ?? '');
 
-        await postRemoteDataSource.emailAndPasswordLogIn(authModel);
-
-        await postLocalDataSource.setUserData(authModel);
-        await postLocalDataSource.setIsUserLoggedIn(isUserLoggedIn: true);
+        await authRemoteDataSource
+            .emailAndPasswordLogIn(authModel)
+            .then((value) async {
+          await authLocalDataSource.setUserData(authModel);
+          await authLocalDataSource.setIsUserLoggedIn(isUserLoggedIn: true);
+        });
 
         return const Right(unit);
       } on UserNotFoundException {
         return Left(UserNotFoundFailure());
       } on WrongPasswordException {
-        return Left(WeakPasswordFailure());
+        return Left(WrongPasswordFailure());
       } on ServerException {
         return Left(ServerFailure());
       }
@@ -82,20 +85,23 @@ class AuthRepositoryImpl extends AuthRepository {
     if (await networkConnectionChecker.isConnected) {
       try {
         UserCredential userCredential =
-            await postRemoteDataSource.faceBookLogIn();
+            await authRemoteDataSource.faceBookLogIn();
         AuthModel authModel = AuthModel(
-            userName: userCredential.user!.displayName!,
+            userName: userCredential.user!.displayName ?? '',
             email: userCredential.user!.email!,
-            phone: userCredential.user!.phoneNumber!);
-        await postRemoteDataSource.setUserData(authModel);
-        await postLocalDataSource.setUserData(authModel);
-        await postLocalDataSource.setIsUserLoggedIn(isUserLoggedIn: true);
+            phone: userCredential.user!.phoneNumber ?? '',
+            password: '');
+        await authRemoteDataSource.setUserData(authModel);
+        await authLocalDataSource.setUserData(authModel);
+        await authLocalDataSource.setIsUserLoggedIn(isUserLoggedIn: true);
 
         return const Right(unit);
       } on FaceBookLogInException {
         return Left(FaceBookLogInFailure());
       } on ServerException {
         return Left(ServerFailure());
+      } catch (e) {
+        return Left(OfflineFailure());
       }
     } else {
       return Left(OfflineFailure());
@@ -107,18 +113,20 @@ class AuthRepositoryImpl extends AuthRepository {
     if (await networkConnectionChecker.isConnected) {
       try {
         UserCredential userCredential =
-            await postRemoteDataSource.googleLogIn();
+            await authRemoteDataSource.googleLogIn();
         AuthModel authModel = AuthModel(
-            userName: userCredential.user!.displayName!,
-            email: userCredential.user!.email!,
-            phone: userCredential.user!.phoneNumber!);
-        await postRemoteDataSource.setUserData(authModel);
-        await postLocalDataSource.setUserData(authModel);
-        await postLocalDataSource.setIsUserLoggedIn(isUserLoggedIn: true);
+            userName: userCredential.user!.displayName ?? '',
+            email: userCredential.user!.email ?? '',
+            phone: userCredential.user!.phoneNumber ?? '');
+        await authRemoteDataSource.setUserData(authModel);
+        await authLocalDataSource.setUserData(authModel);
+        await authLocalDataSource.setIsUserLoggedIn(isUserLoggedIn: true);
 
         return const Right(unit);
       } on ServerException {
         return Left(ServerFailure());
+      } catch (e) {
+        return Left(OfflineFailure());
       }
     } else {
       return Left(OfflineFailure());
@@ -129,9 +137,9 @@ class AuthRepositoryImpl extends AuthRepository {
   Future<Either<Failure, Unit>> logOut() async {
     if (await networkConnectionChecker.isConnected) {
       try {
-        await postLocalDataSource.clearUserData();
-        await postLocalDataSource.setIsUserLoggedIn(isUserLoggedIn: false);
-        await postRemoteDataSource.logOut();
+        await authLocalDataSource.clearUserData();
+        await authLocalDataSource.setIsUserLoggedIn(isUserLoggedIn: false);
+        await authRemoteDataSource.logOut();
 
         return const Right(unit);
       } on ServerException {
@@ -143,12 +151,54 @@ class AuthRepositoryImpl extends AuthRepository {
   }
 
   @override
-  Future<Either<Failure, Unit>> phoneLogIn(
-      {required String completePhoneNumber,
-      required String countryCode,
-      required String phoneNumber,
-      String? otpCode}) {
-    // TODO: implement phoneLogIn
-    throw UnimplementedError();
+  Future<Either<Failure, Unit>> getPhoneNumber(
+      {required String completePhoneNumber}) async {
+    if (await networkConnectionChecker.isConnected) {
+      try {
+        await authRemoteDataSource.submitPhoneNumber(
+            completePhoneNumber: completePhoneNumber);
+
+        return const Right(unit);
+      } on InvalidPhoneNumberException {
+        return Left(InvalidPhoneNumberFailure());
+      } on ServerException {
+        return Left(ServerFailure());
+      }
+    } else {
+      return Left(OfflineFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> verifyPhoneNumber(
+      {required String otpCode, required String completePhoneNumber}) async {
+    if (await networkConnectionChecker.isConnected) {
+      try {
+        AuthModel authModel = AuthModel(
+            userName: '', email: '', password: '', phone: completePhoneNumber);
+
+        await authRemoteDataSource
+            .submitOTPCode(otpCode: otpCode)
+            .then((value) async {
+          await authLocalDataSource.setUserData(authModel);
+          await authRemoteDataSource.setUserData(authModel);
+          await authLocalDataSource.setIsUserLoggedIn(isUserLoggedIn: true);
+        });
+
+        return const Right(unit);
+      } on WrongOTPCodeException {
+        return Left(WrongOTPCodeFailure());
+      } catch (e) {
+        return Left(ServerFailure());
+      }
+    } else {
+      return Left(OfflineFailure());
+    }
+  }
+
+  @override
+  bool goToHomeViewOrLogInView() {
+    bool isUserLoggedIn = authLocalDataSource.getIsUserLoggedIn() ?? false;
+    return isUserLoggedIn;
   }
 }

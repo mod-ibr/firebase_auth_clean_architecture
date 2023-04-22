@@ -1,11 +1,10 @@
-import 'package:firebase_auth_clean_arch/core/Errors/exception.dart';
-import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 
+import '../../../../Core/Errors/exception.dart';
 import '../../../../core/Utils/Constants/auth_constants.dart';
 import '../Models/auth_model.dart';
 
@@ -14,17 +13,15 @@ abstract class AuthRemoteDataSource {
   Future<Unit> setUserData(AuthModel authModel);
   Future<UserCredential> createAccount(AuthModel authModel);
   Future<UserCredential> emailAndPasswordLogIn(AuthModel authModel);
-  Future<Unit> phoneLogIn(
-      {required String completePhoneNumber,
-      required String countryCode,
-      required String phoneNumber,
-      String? otpCode});
+  Future<Unit> submitPhoneNumber({required String completePhoneNumber});
+  Future<Unit> submitOTPCode({required String otpCode});
   Future<UserCredential> faceBookLogIn();
   Future<UserCredential> googleLogIn();
   Future<Unit> logOut();
 }
 
-class AuthRemoteDataSourceHttp implements AuthRemoteDataSource {
+class AuthRemoteDataSourceFireBase implements AuthRemoteDataSource {
+  late String verificationId;
   @override
   Future<UserCredential> createAccount(AuthModel authModel) async {
     try {
@@ -36,20 +33,14 @@ class AuthRemoteDataSourceHttp implements AuthRemoteDataSource {
       return credential;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
-        if (kDebugMode) {
-          print('The password provided is too weak.');
-        }
+       
         throw WeakPasswordException();
       } else if (e.code == 'email-already-in-use') {
-        if (kDebugMode) {
-          print('The account already exists for that email.');
-        }
+       
         throw EmailAlreadyInUseException();
       }
     } catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
+     
       throw ServerException();
     }
     throw ServerException();
@@ -64,20 +55,14 @@ class AuthRemoteDataSourceHttp implements AuthRemoteDataSource {
       return credential;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        if (kDebugMode) {
-          print('No user found for that email.');
-        }
+        
         throw UserNotFoundException();
       } else if (e.code == 'wrong-password') {
-        if (kDebugMode) {
-          print('Wrong password provided for that user.');
-        }
+        
         throw WrongPasswordException();
       }
     } catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
+      
       throw ServerException();
     }
     throw ServerException();
@@ -99,20 +84,14 @@ class AuthRemoteDataSourceHttp implements AuthRemoteDataSource {
         UserCredential userCredential =
             await FirebaseAuth.instance.signInWithCredential(credential);
 
-        if (kDebugMode) {
-          print('Logged in with Facebook successfully!');
-        }
+       
         return userCredential;
       } else {
-        if (kDebugMode) {
-          print('Facebook login failed');
-        }
+        
         throw FaceBookLogInException();
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error signing in with Facebook: $e');
-      }
+     
       throw ServerException();
     }
   }
@@ -140,13 +119,69 @@ class AuthRemoteDataSourceHttp implements AuthRemoteDataSource {
   }
 
   @override
-  Future<Unit> phoneLogIn(
-      {required String completePhoneNumber,
-      required String countryCode,
-      required String phoneNumber,
-      String? otpCode}) {
-    // TODO: implement phoneLogIn
-    throw UnimplementedError();
+  Future<Unit> submitPhoneNumber({required String completePhoneNumber}) async {
+    ///This Functin will pass to verify button of phone Auth Page to take the completed phone number with city code
+    ///and verify that number by sending OTP code by SMS
+
+    // Start verifying Phone Number
+    try {
+      await FirebaseAuth.instance.verifyPhoneNumber(
+          phoneNumber: completePhoneNumber,
+          verificationCompleted: verificationCompleted,
+          verificationFailed: verificationFailed,
+          codeSent: codeSent,
+          codeAutoRetrievalTimeout: codeAutoRetrievalTimeout,
+          timeout: const Duration(minutes: 2));
+      return Future.value(unit);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'invalid-phone-number') {
+        throw InvalidPhoneNumberException();
+      } else {
+        throw ServerException();
+      }
+    } catch (e) {
+      
+      throw ServerException();
+    }
+  }
+
+// -----------------------------
+// Submit Phone Number Functions
+  verificationCompleted(PhoneAuthCredential credential) async {
+    /// This handler will only be called on Android devices which support automatic SMS code resolution.
+    /// After gitting code Automatically then sign in,if not so run submitOTp function after gitting the code manually.
+    await FirebaseAuth.instance.signInWithCredential(credential);
+  }
+
+  verificationFailed(FirebaseAuthException e) {
+    throw Exception('Verification failed: ${e.message}');
+  }
+
+  codeSent(String verificationId, int? resendToken) async {
+    this.verificationId = verificationId;
+  }
+
+  codeAutoRetrievalTimeout(String verificationId) {
+  }
+
+
+  @override
+  Future<Unit> submitOTPCode({required String otpCode}) async {
+    // Create a PhoneAuthCredential with the code
+    PhoneAuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: verificationId, smsCode: otpCode);
+    try {
+      // Sign the user in (or link) with the credential
+      await FirebaseAuth.instance.signInWithCredential(credential);
+      return Future.value(unit);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'invalid-verification-code') {
+        throw WrongOTPCodeException();
+      } else {
+        
+        throw ServerException();
+      }
+    }
   }
 
   @override
@@ -174,15 +209,11 @@ class AuthRemoteDataSourceHttp implements AuthRemoteDataSource {
         );
         return authModel;
       } else {
-        if (kDebugMode) {
-          print('User document does not exist in Firestore');
-        }
+       
         throw NoSavedUserException();
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting user data from Firestore: $e');
-      }
+      
       throw ServerException();
     }
   }
@@ -203,22 +234,16 @@ class AuthRemoteDataSourceHttp implements AuthRemoteDataSource {
       await firestore
           .collection(AuthConstants.kUsersCollection)
           .doc(userId)
-          .set(authData);
-      /*
-          {
+          .set({
         AuthConstants.kUserName: authData[AuthConstants.kUserName],
         AuthConstants.kEmail: authData[AuthConstants.kEmail],
         AuthConstants.kPhone: authData[AuthConstants.kPhone],
-      }
-           */
-      if (kDebugMode) {
-        print('AuthModel data saved to Firestore successfully!');
-      }
+        AuthConstants.kPassword: ''
+      });
+      
       return Future.value(unit);
     } catch (e) {
-      if (kDebugMode) {
-        print('Error saving AuthModel data to Firestore: $e');
-      }
+      
       throw ServerException();
     }
   }
@@ -228,14 +253,10 @@ class AuthRemoteDataSourceHttp implements AuthRemoteDataSource {
     try {
       // Sign out the current user using FirebaseAuth
       await FirebaseAuth.instance.signOut();
-      if (kDebugMode) {
-        print('Logged out successfully!');
-      }
+     
       return Future.value(unit);
     } catch (e) {
-      if (kDebugMode) {
-        print('Error signing out: $e');
-      }
+      
       throw ServerException();
     }
   }

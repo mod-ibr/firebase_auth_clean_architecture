@@ -12,7 +12,7 @@ abstract class AuthLocalDataSource {
   Future<Unit> setUserData(AuthModel authModel);
   Future<Unit> clearUserData();
   Future<Unit> setIsUserLoggedIn({required bool isUserLoggedIn});
-  Future<bool?> getIsUserLoggedIn();
+  bool? getIsUserLoggedIn();
 }
 
 class AuthLocalDataSourceSharedPrefes implements AuthLocalDataSource {
@@ -59,7 +59,7 @@ class AuthLocalDataSourceSharedPrefes implements AuthLocalDataSource {
   }
 
   @override
-  Future<bool?> getIsUserLoggedIn() async {
+  bool? getIsUserLoggedIn() {
     final isUserLoggedIn =
         sharedPreferences.getBool(AuthConstants.kIsUserLoggedIn);
     return isUserLoggedIn;

@@ -15,8 +15,6 @@ class EmailAndPasswordLogInEvent extends AuthEvent {
   List<Object> get props => [authEntity];
 }
 
-class LoadingSplashViewEvent extends AuthEvent {}
-
 class FacebookLogInEvent extends AuthEvent {}
 
 class GoogleLogInEvent extends AuthEvent {}
@@ -31,35 +29,26 @@ class CreateAccountEvent extends AuthEvent {
   List<Object> get props => [authEntity];
 }
 
-class ToggelPasswordVisibilityEvent extends AuthEvent {
-  final bool isPasswordVisible;
+class ToggelPasswordVisibilityEvent extends AuthEvent {}
 
-  const ToggelPasswordVisibilityEvent({required this.isPasswordVisible});
-  @override
-  List<Object> get props => [isPasswordVisible];
-}
-
-// class NavigateToSignUpViewEvent extends AuthEvent {}
-
-// class NavigateToLogInViewEvent extends AuthEvent {}
-
-// class NavigateToPhoneViewEvent extends AuthEvent {}
+class GoToHomeViewOrLogInViewEvent extends AuthEvent {}
 
 class GetPhoneNumberEvent extends AuthEvent {
   final String completePhoneNumber;
-  final String countryCode;
-  final String phoneNumber;
-  const GetPhoneNumberEvent(
-      {required this.completePhoneNumber,
-      required this.countryCode,
-      required this.phoneNumber});
+
+  const GetPhoneNumberEvent({
+    required this.completePhoneNumber,
+  });
   @override
-  List<Object> get props => [completePhoneNumber, countryCode, phoneNumber];
+  List<Object> get props => [completePhoneNumber];
 }
 
 class VerifyPhoneNumberEvent extends AuthEvent {
   final String otpCode;
-  const VerifyPhoneNumberEvent({required this.otpCode});
+  final String completePhoneNumber;
+
+  const VerifyPhoneNumberEvent(
+      {required this.completePhoneNumber, required this.otpCode});
   @override
-  List<Object> get props => [otpCode];
+  List<Object> get props => [otpCode, completePhoneNumber];
 }

@@ -3,7 +3,7 @@ import '../../Domain/Entites/auth_entity.dart';
 
 class AuthModel extends AuthEntity {
   const AuthModel(
-      {required String userName,
+      {String? userName,
       required String email,
       String? password,
       String? phone})
@@ -13,9 +13,9 @@ class AuthModel extends AuthEntity {
   factory AuthModel.fromJson(Map<String, dynamic> map) {
     return AuthModel(
       email: map[AuthConstants.kEmail],
-      password: map[AuthConstants.kPassword],
-      userName: map[AuthConstants.kUserName],
-      phone: map[AuthConstants.kPhone],
+      password: map[AuthConstants.kPassword] ?? '',
+      userName: map[AuthConstants.kUserName] ?? '',
+      phone: map[AuthConstants.kPhone] ?? '',
     );
   }
 

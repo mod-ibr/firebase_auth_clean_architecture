@@ -9,10 +9,6 @@ abstract class AuthState extends Equatable {
 
 class AuthInitial extends AuthState {}
 
-class LoadingSplashViewState extends AuthState {}
-
-class LoadedSplashViewState extends AuthState {}
-
 class LoadingAuthState extends AuthState {}
 
 class SucceededAuthState extends AuthState {}
@@ -25,21 +21,31 @@ class ErrorAuthState extends AuthState {
   List<Object> get props => [message];
 }
 
-class ToggelPasswordVisibilityState extends AuthState {
+class ShowPasswordState extends AuthState {
   final bool isPasswordVisible;
-  const ToggelPasswordVisibilityState({required this.isPasswordVisible});
+  const ShowPasswordState({required this.isPasswordVisible});
+  @override
+  List<Object> get props => [isPasswordVisible];
+}
+
+class HidePasswordState extends AuthState {
+  final bool isPasswordVisible;
+  const HidePasswordState({required this.isPasswordVisible});
   @override
   List<Object> get props => [isPasswordVisible];
 }
 
 class SucceededGetPhoneNumberState extends AuthState {
-  final String completePhoneNumber, countryCode, phoneNumber;
-  const SucceededGetPhoneNumberState(
-      {required this.completePhoneNumber,
-      required this.countryCode,
-      required this.phoneNumber});
+  final String completePhoneNumber;
+  const SucceededGetPhoneNumberState({
+    required this.completePhoneNumber,
+  });
   @override
-  List<Object> get props => [completePhoneNumber, countryCode, phoneNumber];
+  List<Object> get props => [completePhoneNumber];
 }
 
-class SucceededVerifyPhoneNumberState extends AuthEvent {}
+class SucceededVerifyPhoneNumberState extends AuthState {}
+
+class LoggedInState extends AuthState {}
+
+class NotLoggedInState extends AuthState {}
