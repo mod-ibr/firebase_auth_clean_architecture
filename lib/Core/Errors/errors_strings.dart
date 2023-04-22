@@ -12,4 +12,7 @@ abstract class ErrorsStrings {
       'Wrong password provided for that user.';
 
   static String faceBookLogInFailureMessage = 'Facebook login failed.';
+  static String invalidPhoneNumberFailureMessage =
+      'The provided phone number is not valid.';
+static String wrongOTPCodeFailureMessage = 'Invalid Verification Code';
 }

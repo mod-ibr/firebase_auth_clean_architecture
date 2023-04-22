@@ -41,3 +41,14 @@ class FaceBookLogInFailure extends Failure {
   @override
   List<Object?> get props => [];
 }
+
+class InvalidPhoneNumberFailure extends Failure {
+  @override
+  List<Object?> get props => [];
+}
+
+
+class WrongOTPCodeFailure extends Failure {
+  @override
+  List<Object?> get props => [];
+}
