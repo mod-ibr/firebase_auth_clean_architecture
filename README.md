@@ -1,9 +1,25 @@
-# firebase_auth_clean_arch
+# Firebase authentication with clean architecture using Bloc State management
 
-A new Flutter project.
+A new Flutter project to make it easy and reusable for authentication with Firebase. 
+Just Clone and update your configurations and UI then you are ready. 
 
-## Getting Started
-
+## Used Packages: 
+  * awesome_dialog
+  * cloud_firestore
+  * cupertino_icons
+  * dartz
+  * equatable
+  * firebase_auth
+  * firebase_core
+  * firebase_database
+  * flutter_bloc
+  * flutter_facebook_auth
+  * get_it
+  * google_sign_in
+  * internet_connection_checker
+  * intl_phone_field
+  * pin_code_fields
+  * shared_preferences
 This project is a starting point for a Flutter application.
 
 A few resources to get you started if this is your first Flutter project:
